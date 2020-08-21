@@ -2,15 +2,15 @@ import React, { useRef, useEffect, useState } from 'react';
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-layout'
 
-import { Button, Menu, Dropdown,  message } from 'antd';
+import { Button, Menu, Dropdown, message } from 'antd';
 import ProTable from '@ant-design/pro-table';
 
 import CreateRole from '@/components/createInfoModal'
-import ModifyRole from '@/components/ModifyForm/index'
+import { connect } from 'umi'
+import globalStyles from '@/global.less'
+
 import AuthManage from './components/authManage'
 import { getCharList, changeRoleInfo, deleteRole, createRole } from './service'
-import { connect } from 'dva'
-import globalStyles from '@/global.less'
 
 
 
@@ -22,7 +22,7 @@ const CharManage = props => {
     const modifyRef = useRef()
 
     const { dispatch, currentUserEuName } = props
-    const { createModalVisible,deleteModalVisible, authManageModalVisible, modifyModalVisible,  currentRowData } = props
+    const { createModalVisible, deleteModalVisible, authManageModalVisible, modifyModalVisible, currentRowData } = props
     useEffect(() => {
 
         dispatch({
@@ -40,7 +40,7 @@ const CharManage = props => {
                     type: "GlobalModel/changeDeleteModalVisible",
                     payload: true
                 })
-                
+
             }
 
         }
@@ -234,9 +234,9 @@ const CharManage = props => {
                         type: "GlobalModel/saveCurrentRowData",
                         payload: row
                     })
-                    setTimeout(()=>{
+                    setTimeout(() => {
                         modifyRef.current.setFieldsValue(row)
-                    },100)
+                    }, 100)
                 }}>修改</Button>
             ],
         },
@@ -249,7 +249,7 @@ const CharManage = props => {
             title: '角色中文名称',
             dataIndex: 'roleZhName',
 
-            
+
         },
         {
             title: '角色英文名称',
@@ -261,7 +261,7 @@ const CharManage = props => {
             dataIndex: 'remark',
 
         }
-        
+
     ];
 
     return (
@@ -356,11 +356,11 @@ const CharManage = props => {
                         payload: false
                     })
                 }} modalVisible={modifyModalVisible}>
-                 <ProTable
+                <ProTable
                     onSubmit={async value => {
-                        console.log("value",value)
-                        let params = {...value,id:currentRowData.id}
-                        await handleUpdate(params); 
+                        console.log("value", value)
+                        let params = { ...value, id: currentRowData.id }
+                        await handleUpdate(params);
                     }}
                     rowKey="id"
                     type="form"
@@ -376,7 +376,7 @@ const CharManage = props => {
                         payload: false
                     })
                 }} modalVisible={authManageModalVisible}>
-                <AuthManage confirmChangeAuth={confirmChangeAuth} userAuth={currentUserEuName} ></AuthManage>
+                <AuthManage confirmChangeAuth={confirmChangeAuth} userAuth={currentUserEuName} />
             </CreateRole>
 
             <CreateRole

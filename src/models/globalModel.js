@@ -1,39 +1,49 @@
 const GlobalModel = {
-    namespace: "GlobalModel",
-    state: {
-        createModalVisible: false,
-        modifyModalVisible: false,
-        deleteModalVisible:false,
-        currentModifyRole: {},
-        currentRowData: {}
+  namespace: 'GlobalModel',
+  state: {
+    createModalVisible: false,
+    createDetailModalVisible: false,
+    modifyModalVisible: false,
+    modifyDetailModalVisible: false,
+    deleteModalVisible: false,
+    deleteDetailModalVisible: false,
+    currentModifyRole: {},
+    currentRowData: {},
+  },
+  effects: {},
+  reducers: {
+    changeCreateModalVisible(state, action) {
+      return { ...state, createModalVisible: action.payload };
     },
-    effects: {
 
+    changeCreateDetailModalVisible(state, action) {
+      return { ...state, createDetailModalVisible: action.payload };
     },
-    reducers: {
-        changeCreateModalVisible(state, action) {
 
-            return { ...state, createModalVisible: action.payload }
-        },
-        changeModifyModalVisible(state, action) {
+    changeModifyModalVisible(state, action) {
+      return { ...state, modifyModalVisible: action.payload };
+    },
 
+    changeModifyDetailModalVisible(state, action) {
+      return { ...state, modifyDetailModalVisible: action.payload };
+    },
 
-            return { ...state, modifyModalVisible: action.payload }
-        },
-        changeDeleteModalVisible(state, action) {
+    changeDeleteModalVisible(state, action) {
+      return { ...state, deleteModalVisible: action.payload };
+    },
 
+    changeDeleteDetailModalVisible(state, action) {
+      return { ...state, deleteDetailModalVisible: action.payload };
+    },
 
-            return { ...state, deleteModalVisible: action.payload }
-        },
-        saveCurrentModifyRole(state, action) {
-            return { ...state, currentModifyRole: action.payload || {}}
-        },
-        saveCurrentRowData(state, action) {
+    saveCurrentModifyRole(state, action) {
+      return { ...state, currentModifyRole: action.payload || {} };
+    },
 
-            return { ...state, currentRowData: action.payload }
-        },
+    saveCurrentRowData(state, action) {
+      return { ...state, currentRowData: action.payload };
+    },
+  },
+};
 
-    }
-}
-
-export default GlobalModel
+export default GlobalModel;

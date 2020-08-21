@@ -1,111 +1,118 @@
+import { message } from 'antd';
 import {
-    getDictDetailAccroName,
-    getDictDetailListPage,
-    changeDictDetail,
-    addDictDetail,
-    deleteDictDetail,
-    getDictListPage,
-    deleteDict,
-    addDict,
-    updateDict
-} from './service'
-import { message } from 'antd'
+  getDictDetailListPage,
+  changeDictDetail,
+  addDictDetail,
+  deleteDictDetail,
+  getDictListPage,
+  deleteDict,
+  addDict,
+  updateDict,
+} from './service';
 
 const DictModel = {
-    namespace: "DictModel",
-    state: {
-        dictList: [],
-        dictDetailList: [],
-        createDetailModalVisible: false,
-        deleteDetailModalVisible: false
+  namespace: 'DictModel',
+  state: {
+    dictList: [],
+    dictDetailList: [],
+  },
+
+  effects: {
+    *fetchGetDictListPage({ payload }, { put, call }) {
+      const response = yield call(getDictListPage, payload);
+      yield put({
+        type: 'saveDictList',
+        payload: response,
+      });
     },
-    effects: {
-        *fetchgetDictListPage({ payload }, { put, call }) {
-            const response = yield call(getDictListPage, payload)
-            yield put({
-                type: "saveDictList",
-                payload: response
-            })
-        },
-        *fetchdeleteDict({ payload }, { call }) {
-            yield call(deleteDict, payload)
 
-
-        },
-        *fetchaddDict({ payload }, { put, call }) {
-            yield call(addDict, payload)
-
-            yield put({
-                type: "GlobalModel/changeCreateModalVisible",
-                payload: false
-            })
-
-        },
-        *fetchupdateDict({ payload }, { put, call }) {
-            yield call(updateDict, payload)
-            yield put({
-                type: "fetchgetDictListPage"
-            })
-        },
-
-        *fetchgetDictDetailListPage({ payload }, { put, call }) {
-            // console.log("payload",payload)
-            const response = yield call(getDictDetailListPage, payload)
-            yield put({
-                type: "saveDictDetailList",
-                payload: response
-            })
-        },
-
-        *fetchdeleteDetailDict({ payload }, { put, call }) {
-            yield call(deleteDictDetail, payload.id)
-            yield put({
-                type: "fetchgetDictDetailListPage",
-                payload: { name: payload.dictName }
-            })
-
-        },
-        *fetchaddDetailDict({ payload }, { put, call }) {
-            const response = yield call(addDictDetail, payload)
-            if (response.code !== 200) {
-
-                message.error(`("添加字典详情错误，：${response.message}`)
-                return
-
-
-            }
-
-            yield put({
-                type: "fetchgetDictDetailListPage",
-                payload: { name: payload.dictName }
-            })
-            yield put({
-                type: "changeCreateDetailModalVisible",
-                payload: false
-            })
-
-        },
-        *fetchupdateDetailDict({ payload }, { put, call }) {
-            yield call(changeDictDetail, payload)
-
-        }
+    *fetchDeleteDict({ payload }, { put, call }) {
+      const response = yield call(deleteDict, payload);
+      if (response.code === 200) {
+        message.info('删除成功');
+      } else {
+        message.error(`删除失败，原因：${response.message}`);
+      }
+      yield put({
+        type: 'GlobalModel/changeDeleteModalVisible',
+        payload: false,
+      });
     },
-    reducers: {
-        saveDictList(state, action) {
-            return { ...state, dictList: action.payload.data.rows || {} }
-        },
-        saveDictDetailList(state, action) {
-            return { ...state, dictDetailList: action.payload.data.rows || {} }
-        },
-        changeCreateDetailModalVisible(state, action) {
 
-            return { ...state, createDetailModalVisible: action.payload }
-        },
-        changeDeleteDetailModalVisible(state, action) {
+    *fetchAddDict({ payload }, { put, call }) {
+      yield call(addDict, payload);
 
-            return { ...state, deleteDetailModalVisible: action.payload }
-        }
-    }
-}
+      yield put({
+        type: 'GlobalModel/changeCreateModalVisible',
+        payload: false,
+      });
+    },
 
-export default DictModel
+    *fetchUpdateDict({ payload }, { put, call }) {
+      const response = yield call(updateDict, payload);
+      if (response.code === 200) {
+        message.info('修改成功');
+      } else {
+        message.error(`修改失败，原因：${response.message}`);
+      }
+      yield put({
+        type: 'GlobalModel/changeModifyModalVisible',
+        payload: false,
+      });
+    },
+
+    *fetchGetDictDetailListPage({ payload }, { put, call }) {
+      const response = yield call(getDictDetailListPage, payload);
+      yield put({
+        type: 'saveDictDetailList',
+        payload: response,
+      });
+    },
+
+    *fetchDeleteDetailDict({ payload }, { put, call }) {
+      yield call(deleteDictDetail, payload.ids);
+
+      yield put({
+        type: 'GlobalModel/changeDeleteDetailModalVisible',
+        payload: false,
+      });
+    },
+
+    *fetchAddDetailDict({ payload }, { put, call }) {
+      const response = yield call(addDictDetail, payload);
+      if (response.code !== 200) {
+        message.error(`("添加字典详情错误，：${response.message}`);
+      } else {
+        message.info('添加字典详情成功');
+      }
+      yield put({
+        type: 'GlobalModel/changeCreateDetailModalVisible',
+        payload: false,
+      });
+    },
+
+    *fetchUpdateDetailDict({ payload }, { put, call }) {
+      const res = yield call(changeDictDetail, payload);
+      if (res.code !== 200) {
+        message.error(`("修改字典详情错误，：${res.message}`);
+      } else {
+        message.info('修改字典详情成功');
+      }
+      yield put({
+        type: 'GlobalModel/changeModifyDetailModalVisible',
+        payload: false,
+      });
+    },
+  },
+
+  reducers: {
+    saveDictList(state, action) {
+      return { ...state, dictList: action.payload.data.rows || [] };
+    },
+    saveDictDetailList(state, action) {
+      return { ...state, dictDetailList: action.payload.data.rows || [] };
+    },
+  },
+};
+
+export default DictModel;

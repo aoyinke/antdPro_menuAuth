@@ -1,4 +1,3 @@
-import { resetPassword } from './service'
 
 
 const UserManageModel = {
@@ -6,10 +5,7 @@ const UserManageModel = {
     state: {
         resetPasswordModal: false,
         currentResetUser: 0,
-        postValueEnum: {},
-        statusValueEnum: {},
-        sexValueEnum: {},
-        roleValueEnum: {},
+
     },
     effects: {
 
@@ -22,23 +18,8 @@ const UserManageModel = {
         changeCurrentResetUser(state, action) {
 
             return { ...state, currentResetUser: action.payload }
-        },
-        SavePostValueEnum(state, action) {
-
-            return { ...state, postValueEnum: action.payload }
-        },
-        SaveStatusValueEnum(state, action) {
-
-            return { ...state, statusValueEnum: action.payload }
-        },
-        SaveSexValueEnum(state, action) {
-
-            return { ...state, sexValueEnum: action.payload }
-        },
-        SaveRoleValueEnum(state, action) {
-
-            return { ...state, roleValueEnum: action.payload }
         }
+
     }
 }
 

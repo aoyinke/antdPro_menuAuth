@@ -1,55 +1,51 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { PlusOutlined, DownOutlined } from '@ant-design/icons';
 import { PageHeaderWrapper } from '@ant-design/pro-layout'
-import { Button, Menu, Dropdown, Form, message, Card, Select } from 'antd';
+import { Button, Menu, Dropdown, message } from 'antd';
 import ProTable from '@ant-design/pro-table';
 
-import CreateAlertModal from '@/components/createInfoModal'
-import ModifyAlert from '@/components/ModifyForm/index'
+import DeleteAlertModal from '@/components/DeleteModal'
+import CreateAlertModal from '@/components/CreateModal'
+import ModifyAlertModal from '@/components/ModifyModal';
 
+import { connect } from 'umi'
 import { getAlertList, createAlert, changeAlert, deleteAlert, getDictDetailAccroName } from './service'
-import { connect } from 'dva'
-
-import globalStyles from '@/global.less'
+import { modifyColumns, columns } from './column'
 
 
 
+let selected = []
+const equipCategoryEnum = {}
 const AlertManage = props => {
 
-    
-    const [selected, handleSelected] = useState([])
-    const [equipCategoryList, handlEquipCategoryList] = useState({})
-    const { createModalVisible, modifyModalVisible, deleteModalVisible,currentRowData } = props
+
     const { dispatch } = props
     const actionRef = useRef();
     const modifyRef = useRef()
 
 
-    useEffect(() => {
-        const fetchDate = async () => {
-            let res = await getDictDetailAccroName(['alarmType'])
-            const hide = message.loading('正在请求');
+    const prepareEnum = async () => {
+        const res = await getDictDetailAccroName(['alarmType'])
+        const hide = message.loading('正在请求');
 
-            console.log("res", res)
-            try {
-                if (res.code == 200) {
-                    let tmp = res.data.alarmType
-                    let tmps = {}
-                    tmp.forEach(element => {
-                        tmps[element.value] = { text: element.laber }
-                    });
-                    handlEquipCategoryList(tmps)
-                    hide();
-                }
-
-            } catch (error) {
+        try {
+            if (res.code === 200) {
+                const { alarmType } = res.data
+                alarmType.forEach(element => {
+                    equipCategoryEnum[element.value] = { text: element.laber }
+                });
                 hide();
-                message.error('请求失败请重试！');
             }
 
-
+        } catch (error) {
+            hide();
+            message.error('请求失败请重试！');
         }
-        fetchDate();
+
+
+    }
+    useEffect(() => {
+        prepareEnum();
 
     }, [])
 
@@ -84,14 +80,19 @@ const AlertManage = props => {
         const hide = message.loading('正在添加');
 
         try {
-            await createAlert(value);
-            hide();
-            message.success('添加成功');
-            return true;
+
+            const res = await createAlert(value);
+            if (res.code === 200) {
+                hide();
+                message.success('添加成功');
+                actionRef.current.reload()
+            } else {
+                message.error(`添加错误，${res.message}`)
+            }
+
         } catch (error) {
             hide();
             message.error('添加失败请重试！');
-            return false;
         }
     }
 
@@ -102,25 +103,31 @@ const AlertManage = props => {
      */
 
     const deleteAlertFunc = async () => {
-        let ids = selected.map(item => {
+        const ids = selected.map(item => {
             return item.id
         })
+        if (ids.length) {
+            const hide = message.loading('正在删除');
 
-        const hide = message.loading('正在删除');
+            try {
+                const res = await deleteAlert(ids);
+                if (res.code === 200) {
+                    hide();
+                    message.success('删除成功，即将刷新');
 
-        try {
-            await deleteAlert(ids);
-            hide();
-            message.success('删除成功，即将刷新');
-            dispatch({
-                type: "GlobalModel/changeDeleteModalVisible",
-                payload: false
-            })
-            actionRef.current.reload();
-        } catch (error) {
-            hide();
-            message.error('删除失败，请重试');
+                    actionRef.current.reload();
+                } else {
+                    message.error(`批量删除失败，${res.message}`)
+                }
+
+            } catch (error) {
+                hide();
+                message.error('删除失败，请重试');
+            }
+        } else {
+            message.error("批量删除不可为空")
         }
+
 
     }
 
@@ -148,174 +155,58 @@ const AlertManage = props => {
             return false;
         }
     };
-    const columns = [
-        {
-            title: '报警类型',
-            dataIndex: 'typeId',
-            valueEnum: equipCategoryList,
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-            hideInTable: true
-        },
 
-        {
-            title: '报警类型英文名',
-            dataIndex: 'enName',
-            ellipsis: true,
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-            width: "15%",
-            hideInSearch: true,
-        },
-        {
-            title: '报警类型中文名',
-            dataIndex: 'zhName',
-            ellipsis: true,
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-            width: '20%',
-            hideInSearch: true,
-        },
-        {
-            title: '备注',
-            dataIndex: 'remark',
-            ellipsis: true,
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
-                },
-            ],
-            width: "15%",
-            hideInSearch: true,
-        },
-        {
-            title: '报警类型id',
-            dataIndex: 'value',
-            ellipsis: true,
-            rules: [
-                {
-                    required: true,
-                    message: '此项为必填项',
+    const options = (text, row, _, action) => [
 
-                },
-                { max: 2, message: "最长2个数字" },
-                {
-                    type: "number",
-                    transform: (val) => Number(val),
-                    message: "只能输入数字",
-                },
-            ],
-            width: "15%",
-            hideInSearch: true,
-        },
-        {
-            title: '创建时间',
-            dataIndex: 'createTime',
-            width: "15%",
-            hideInSearch: true,
-            hideInForm:true
-        },
-        {
-            title: '操作',
-            width: "15%",
-            valueType: 'option',
-            render: (text, row, _, action) => [
+        <Button type="primary" onClick={() => {
+            dispatch({
+                type: "GlobalModel/changeModifyModalVisible",
+                payload: true
+            })
 
-                <Button type="primary" onClick={() => {
-                    dispatch({
-                        type: "GlobalModel/changeModifyModalVisible",
-                        payload: true
-                    })
-                    
-                    dispatch({
-                        type: "GlobalModel/saveCurrentRowData",
-                        payload: row
-                    })
-                    setTimeout(()=>{
-                        modifyRef.current.setFieldsValue(row)
-                    },100)
+            dispatch({
+                type: "GlobalModel/saveCurrentRowData",
+                payload: row
+            })
+            setTimeout(() => {
+                modifyRef.current.setFieldsValue(row)
+            }, 100)
 
-                }}>修改</Button>
-            ],
-        },
-    ];
-
-    const modifyColumns = [
-        {
-            title: '报警类型',
-            dataIndex: 'typeId',
-            valueEnum: equipCategoryList,
-
-        },
-
-        {
-            title: '报警类型英文名',
-            dataIndex: 'enName',
-
-        },
-        {
-            title: '报警类型中文名',
-            dataIndex: 'zhName',
-
-        },
-        {
-            title: '备注',
-            dataIndex: 'remark',
-
-        },
-        {
-            title: '报警类型id',
-            dataIndex: 'value',
-
-        }
-        
-    ];
+        }}>修改</Button>
+    ]
 
     return (
         <PageHeaderWrapper title={false}>
             <ProTable
-                columns={columns}
+                columns={columns(equipCategoryEnum, options)}
                 pagination={{
                     showQuickJumper: true,
                 }}
-                search={true}
+                search
                 actionRef={actionRef}
                 request={async (params) => {
-                    params.pageNum = params.current
-                    if (!params.typeId) {
-                        return;
-                    }
-                    let res = await getAlertList(params)
-                    if (res.code != 200) {
+                    const par = params
+                    par.pageNum = params.current
+                    const res = await getAlertList(params)
+                    if (res.code === 200) {
                         return Promise.resolve({
-                            success: true
+                            data: res.data.rows,
+                            success: true,
+                            total: res.data.total,
+
                         })
+
                     }
                     return Promise.resolve({
-                        data: res.data.rows,
-                        success: true,
-                        total: res.data.total,
-
+                        success: true
                     })
+
                 }}
-                manualRequest={true}
+                manualRequest
                 rowKey="id"
                 rowSelection={{
                     onChange: (selectedRowKeys, selectedRows) => {
-                        handleSelected(selectedRows)
+                        selected = selectedRows
                     }
 
                 }}
@@ -339,70 +230,24 @@ const AlertManage = props => {
                 ]}
             />
 
-            <CreateAlertModal
-                title="新建报警" onCancel={() => {
-                    dispatch({
-                        type: "GlobalModel/changeCreateModalVisible",
-                        payload: false
-                    })
-                }} modalVisible={createModalVisible}>
-                <ProTable
-                    onSubmit={async value => {
-                        let success = await createAlertFunc(value);
-                        if (success) {
-                            dispatch({
-                                type: "GlobalModel/changeCreateModalVisible",
-                                payload: false
-                            })
-
-                            if (actionRef.current) {
-                                actionRef.current.reload();
-                            }
-                        }
-                    }}
-                    rowKey="id"
-                    type="form"
-                    columns={columns}
-                />
-            </CreateAlertModal>
-            <CreateAlertModal
-                title="修改报警信息"
-                onCancel={() => {
-                    dispatch({
-                        type: "GlobalModel/changeModifyModalVisible",
-                        payload: false
-                    })
-                }} modalVisible={modifyModalVisible}>
-                <ProTable
-                    onSubmit={async value => {
-                        console.log("value",value)
-                        let params = {...value,id:currentRowData.id}
-                        await handleUpdate(params);
-
-                
-                        
-                    }}
-                    rowKey="id"
-                    type="form"
-                    columns={modifyColumns}
-                    formRef={modifyRef}
-                />
-            </CreateAlertModal>
 
             <CreateAlertModal
+                columns={columns(equipCategoryEnum, options)}
+                onSubmit={createAlertFunc}
+                title="新建报警"
+            />
+            <ModifyAlertModal
+                title="修改报警"
+                modifyColumns={modifyColumns(equipCategoryEnum)}
+                modifyRef={modifyRef}
+                onSubmit={handleUpdate}
+            />
+
+            <DeleteAlertModal
                 title="删除报警信息"
+                deleteFunc={deleteAlertFunc}
+            />
 
-                onCancel={() => {
-                    dispatch({
-                        type: "GlobalModel/changeDeleteModalVisible",
-                        payload: false
-                    })
-                }} modalVisible={deleteModalVisible}>
-                <p>是否确认删除</p>
-                <div className={globalStyles.flexCenter}>
-                    <Button type="primary" onClick={deleteAlertFunc} >确认删除</Button>
-                </div>
-            </CreateAlertModal>
         </PageHeaderWrapper>
     )
 }
