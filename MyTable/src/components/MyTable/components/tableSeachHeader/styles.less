@@ -1,0 +1,58 @@
+.SearchCard {
+  margin-bottom: 20px;
+}
+
+.SearchBar {
+  justify-content: flex-start;
+  margin-left: -8px;
+  margin-right: -8px;
+  position: relative;
+  :global{
+    .ant-col-8{
+      max-width: 30%;
+    }
+    .ant-col-9{
+      max-width: 30%;
+    }
+  }
+}
+
+.operation {
+  position: absolute;
+  right: 0;
+  &.collapsedOper{
+    bottom: -22%;
+  }
+}
+
+.hideShowSeach{
+  display: none;
+}
+
+.collapse {
+  span {
+    color: #1890FF;
+    cursor: pointer;
+
+    .unfold {
+      transform: rotate(180deg);
+    }
+    transition: all 0.3s ease 0s;
+  }
+
+  a {
+    padding-right: 8px;
+
+  }
+
+}
+
+@keyframes myRotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(180deg);
+  }
+}
